@@ -1,22 +1,21 @@
 module Main where
 
-import Data.List (find, intercalate, permutations)
+import Data.List (find, intercalate, nub, permutations, sort)
 
-splitByPairs :: [a] -> ([a], [a])
-splitByPairs = foldr (\e (xs, ys) -> (e : ys, xs)) ([], [])
+pairs :: [a] -> [(a,a)]
+pairs [] = []
+pairs [x] = []
+pairs (x1:x2:xs) = (x1,x2) : pairs xs
 
-exponentialSum :: Floating a => [a] -> a
-exponentialSum = foldl (+) 0 . (uncurry $ zipWith (**)) . splitByPairs
+exponentialSum :: Floating a => [(a,a)] -> a
+exponentialSum = foldl (+) 0 . map (\(b,e) -> b ** e)
 
-findPandigitalSum :: (Eq a, Floating a) => a -> Maybe [a]
-findPandigitalSum n = find (\ds -> exponentialSum ds == n) $ permutations [0..9]
+showExponentialSum :: (RealFrac a, Show a) => [(a,a)] -> String
+showExponentialSum = intercalate " + " . map (\(b,e) -> (show $ round b) ++ "^" ++ (show $ round e))
 
-printExponentialSum :: (RealFrac a, Show a) => Maybe [a] -> IO()
-printExponentialSum Nothing =
-  putStrLn "No solution found!!!"
-printExponentialSum (Just ds) = do
-  putStrLn $ intercalate " + " $ makePairs ds where
-    makePairs = map (\(b,e) -> show b ++ "^" ++ show e) . (uncurry $ zipWith (,)) . splitByPairs . map round
+findAllPandigitalSums :: (Floating a, Ord a) => a -> [[(a, a)]]
+findAllPandigitalSums n = nub $ filter (\ds -> exponentialSum ds == n) $ map (sort . pairs) $ permutations [0,1,2,3,4,5,6,7,8,9]
 
 main = do
-  mapM printExponentialSum $ map findPandigitalSum [2016..2050]
+  mapM (putStrLn . showExponentialSum) $ findAllPandigitalSums 2016
+
